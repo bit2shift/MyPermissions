@@ -29,16 +29,17 @@ public class CommandTree extends Tree<CommandTreeNode> {
         this.customManager = customManager;
     }
 
-    public void commandCall(ICommandSender sender, List<String> args) {
+    public void commandCall(ICommandSender sender, List<String> args) throws CommandException {
         CommandTreeNode node = getRoot();
         while (!args.isEmpty() && node.getChild(args.get(0)) != null) {
             node = node.getChild(args.get(0));
             args = args.subList(1, args.size());
         }
 
-        if(hasPermission(sender, node)) {
+        if(hasPermission(sender, node))
             node.commandCall(sender, args);
-        }
+        else
+            throw new CommandException("commands.generic.permission");
     }
 
     public CommandTreeNode getNodeFromArgs(List<String> args) {
@@ -76,9 +77,9 @@ public class CommandTree extends Tree<CommandTreeNode> {
         return false;
     }
 
-    public boolean hasPermission(ICommandSender sender, CommandTreeNode node) throws CommandException {
+    public boolean hasPermission(ICommandSender sender, CommandTreeNode node) {
         if(!node.getAnnotation().console() && (sender instanceof MinecraftServer || sender instanceof RConConsoleSource || sender instanceof CommandBlockLogic)) {
-            throw new CommandException("commands.generic.permission");
+            return false;
         }
 
         if(sender instanceof EntityPlayer) {
@@ -89,7 +90,7 @@ public class CommandTree extends Tree<CommandTreeNode> {
                (customManager != null && customManager.hasPermission(uuid, permission))) {
                 return true;
             }
-            throw new CommandException("commands.generic.permission");
+            return false;
         }
         return true;
     }
